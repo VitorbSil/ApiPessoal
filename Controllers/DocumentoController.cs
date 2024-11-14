@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ApiPessoal.Data;
 using APIPessoal.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace APIPessoal.Controllers
 {
@@ -11,79 +13,123 @@ namespace APIPessoal.Controllers
     [Route("[controller]")]
     public class DocumentoController : ControllerBase
     {
+
+        private readonly DataContext _context;
+
+        public DocumentoController(DataContext context)
+        {
+            _context = context;
+        }
         private static List<Documento> documentos = new List<Documento>()
     {
-        new Documento() { Id = 1, Titulo = "Contrato de Prestação de Serviços", Tipo = "Contrato", 
-                          DataCriacao = new DateTime(2023, 10, 24), Status = "Ativo", 
-                          Observacoes = "Contrato de prestação de serviços firmado entre as partes.", Assinado = true },
-        new Documento() { Id = 2, Titulo = "Procuração", Tipo = "Procuração", 
-                          DataCriacao = new DateTime(2023, 07, 08), Status = "Ativo", 
-                          Observacoes = "Procuração para representação legal do cliente.", Assinado = false },
-        new Documento() { Id = 3, Titulo = "Certidão de Casamento", Tipo = "Certidão", 
-                          DataCriacao = new DateTime(2023, 04, 20), Status = "Ativo", 
-                          Observacoes = "Certidão de casamento registrada em cartório.", Assinado = false }
+        new Documento() { Id = 1, Titulo = "Contrato de Prestação de Serviços", Tipo = "Contrato",
+                          DataCriacao = new DateTime(2023, 10, 24), Status = "Ativo",
+                          Observacoes = "Contrato de prestação de serviços firmado entre as partes.", Assinado = true, ParteId = 1 },
+
+        new Documento() { Id = 2, Titulo = "Procuração", Tipo = "Procuração",
+                          DataCriacao = new DateTime(2023, 07, 08), Status = "Ativo",
+                          Observacoes = "Procuração para representação legal do cliente.", Assinado = true, ParteId = 1 },
+
+        new Documento() { Id = 3, Titulo = "Certidão de Casamento", Tipo = "Certidão",
+                          DataCriacao = new DateTime(2023, 04, 20), Status = "Ativo",
+                          Observacoes = "Certidão de casamento registrada em cartório.", Assinado = false, ParteId = 1 },
+                          
+        new Documento() { Id = 4, Titulo = "Alvará de Soltura", Tipo = "Alvará",
+                          DataCriacao = new DateTime(2024, 11, 01), Status = "Pendente",
+                          Observacoes = "Alvará de Soltura esperando análise do Juiz.", Assinado = false, ParteId = 3 },
+
+        new Documento() { Id = 5, Titulo = "Petição de Invertário", Tipo = "Petição",
+                          DataCriacao = new DateTime(2021, 01, 01), Status = "Ativo",
+                          Observacoes = "Petição cadastrada e enviada para o Juiz.", Assinado = true, ParteId = 3 },
+
+        new Documento() { Id = 6, Titulo = "Mandato de Busca", Tipo = "Mandato",
+                          DataCriacao = new DateTime(2022, 06, 15), Status = "Pendente",
+                          Observacoes = "Mandado de Busca aguardando assinatura do judiciário", Assinado = false, ParteId = 2 }
     };
 
-    // GET: api/documentos
-    [HttpGet("GetAll")]
-    public IActionResult Get()
-    {
-        return Ok(documentos);
-    }
 
-    // GET: api/documentos/{id}
-    [HttpGet("{id}")]
-    public ActionResult<Documento> GetDocumento(int id)
-    {
-        var documento = documentos.FirstOrDefault(d => d.Id == id);
-        if (documento == null)
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> Get()
         {
-            return NotFound();
-        }
-        return Ok(documento);
-    }
-
-    // POST: api/documentos
-    [HttpPost]
-    public ActionResult<Documento> PostDocumento([FromBody] Documento documento)
-    {
-        documento.Id = documentos.Max(d => d.Id) + 1;  // Atribui um novo ID
-        documentos.Add(documento);
-        return CreatedAtAction(nameof(GetDocumento), new { id = documento.Id }, documento);
-    }
-
-    // PUT: api/documentos/{id}
-    [HttpPut("{id}")]
-    public IActionResult PutDocumento(int id, [FromBody] Documento documentoAtualizado)
-    {
-        var documentoExistente = documentos.FirstOrDefault(d => d.Id == id);
-        if (documentoExistente == null)
-        {
-            return NotFound();
+            try
+            {
+                List<Documento> lista = await _context.TB_DOCUMENTOS.ToListAsync();
+                return Ok(lista);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        documentoExistente.Titulo = documentoAtualizado.Titulo;
-        documentoExistente.Tipo = documentoAtualizado.Tipo;
-        documentoExistente.DataCriacao = documentoAtualizado.DataCriacao;
-        documentoExistente.Status = documentoAtualizado.Status;
-        documentoExistente.Observacoes = documentoAtualizado.Observacoes;
-        documentoExistente.Assinado = documentoAtualizado.Assinado;
 
-        return Ok(documentoExistente);
-    }
-
-    // DELETE: api/documentos/{id}
-    [HttpDelete("{id}")]
-    public IActionResult DeleteDocumento(int id)
-    {
-        var documento = documentos.FirstOrDefault(d => d.Id == id);
-        if (documento == null)
+        [HttpGet("{id}")]
+        public async Task<ActionResult> GetDocumento(int id)
         {
-            return NotFound();
+            try
+            {
+                Documento d = await _context.TB_DOCUMENTOS
+                    .FirstOrDefaultAsync(dBusca => dBusca.Id == id);
+
+                return Ok(d);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        documentos.Remove(documento);
-        return Ok(documentos);
-    }
+
+        [HttpPost]
+        public async Task<ActionResult> Add(Documento novoDocumento)
+        {
+            try
+            {
+                await _context.TB_DOCUMENTOS.AddAsync(novoDocumento);
+                await _context.SaveChangesAsync();
+
+                return Ok(novoDocumento.Id);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        [HttpPut]
+        public async Task<IActionResult> Update(Documento novoDocumento)
+        {
+            try
+            {
+                _context.TB_DOCUMENTOS.Update(novoDocumento);
+                int linhasAfetadas = await _context.SaveChangesAsync();
+
+                return Ok(linhasAfetadas);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                Documento dRemover = await _context.TB_DOCUMENTOS.FirstOrDefaultAsync(d => d.Id == id);
+
+                _context.TB_DOCUMENTOS.Remove(dRemover);
+                int linhasAfetadas = await _context.SaveChangesAsync();
+
+                return Ok(linhasAfetadas);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

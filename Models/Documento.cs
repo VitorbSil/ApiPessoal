@@ -14,5 +14,9 @@ namespace APIPessoal.Models
     public string Status { get; set; }  // Ex: "Em andamento", "Concluído"
     public string Observacoes { get; set; }
     public bool Assinado { get; set; }  // Indica se o documento foi assinado
+
+    public int ParteId {get; set;}
+    public Parte? Parte {get; set;}
+
     }
 }

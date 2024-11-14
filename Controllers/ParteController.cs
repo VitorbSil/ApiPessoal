@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ApiPessoal.Data;
 using APIPessoal.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace APIPessoal.Controllers
 {
@@ -11,71 +13,102 @@ namespace APIPessoal.Controllers
     [Route("[controller]")]
     public class ParteController : ControllerBase
     {
+
+        private readonly DataContext _context;
+
+        public ParteController(DataContext context)
+        {
+            _context = context;
+        }
         private static List<Parte> partes = new List<Parte>()
     {
-        new Parte() { Id = 1, Nome = "Vitor", Tipo = "Cliente", DocumentoIdentidade = "RG", 
+        new Parte() { Id = 1, Nome = "Vitor", Tipo = "Cliente", DocumentoIdentidade = "RG",
                       Endereco = "Rua 1, Bairro A, Cidade X", Telefone = "1234-5678", Email = "vitor@email.com" },
-        new Parte() { Id = 2, Nome = "Ana", Tipo = "Advogado", DocumentoIdentidade = "OAB", 
+        new Parte() { Id = 2, Nome = "Ana", Tipo = "Advogado", DocumentoIdentidade = "OAB",
                       Endereco = "Rua 2, Bairro B, Cidade Y", Telefone = "2345-6789", Email = "ana@adv.com" },
-        new Parte() { Id = 3, Nome = "Carlos", Tipo = "Testemunha", DocumentoIdentidade = "CPF", 
+        new Parte() { Id = 3, Nome = "Carlos", Tipo = "Testemunha", DocumentoIdentidade = "CPF",
                       Endereco = "Rua 3, Bairro C, Cidade Z", Telefone = "3456-7890", Email = "carlos@teste.com" }
     };
 
-    [HttpGet("GetAll")]
-    public IActionResult Get()
-    {
-        return Ok(partes);
-    }
-
-    [HttpGet("{id}")]
-    public ActionResult<Parte> GetParte(int id)
-    {
-        var parte = partes.FirstOrDefault(p => p.Id == id);
-        if (parte == null)
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> Get()
         {
-            return NotFound();
-        }
-        return Ok(parte);
-    }
-
-    [HttpPost]
-    public ActionResult<Parte> PostParte([FromBody] Parte parte)
-    {
-        parte.Id = partes.Max(p => p.Id) + 1;  // Atribui um novo ID
-        partes.Add(parte);
-        return Ok(partes);
-    }
-
-    [HttpPut("{id}")]
-    public IActionResult PutParte(int id, [FromBody] Parte parteAtualizada)
-    {
-        var parteExistente = partes.FirstOrDefault(p => p.Id == id);
-        if (parteExistente == null)
-        {
-            return NotFound();
+            try
+            {
+                List<Parte> lista = await _context.TB_PARTES.ToListAsync();
+                return Ok(lista);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        parteExistente.Nome = parteAtualizada.Nome;
-        parteExistente.Tipo = parteAtualizada.Tipo;
-        parteExistente.DocumentoIdentidade = parteAtualizada.DocumentoIdentidade;
-        parteExistente.Endereco = parteAtualizada.Endereco;
-        parteExistente.Telefone = parteAtualizada.Telefone;
-        parteExistente.Email = parteAtualizada.Email;
 
-        return Ok(partes);
-    }
-
-    [HttpDelete("{id}")]
-    public IActionResult DeleteParte(int id)
-    {
-        var parte = partes.FirstOrDefault(p => p.Id == id);
-        if (parte == null)
+        [HttpGet("{id}")]
+        public async Task<ActionResult> GetParte(int id)
         {
-            return NotFound();
+            try
+            {
+                Parte p = await _context.TB_PARTES
+                    .FirstOrDefaultAsync(pBusca => pBusca.Id == id);
+
+                return Ok(p);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        partes.Remove(parte);
-        return Ok(partes);
-    }
+
+        [HttpPost]
+        public async Task<ActionResult> Add(Parte novaParte)
+        {
+            try
+            {
+                await _context.TB_PARTES.AddAsync(novaParte);
+                await _context.SaveChangesAsync();
+
+                return Ok(novaParte.Id);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPut]
+        public async Task<IActionResult> Update(Parte novaParte)
+        {
+            try
+            {
+                _context.TB_PARTES.Update(novaParte);
+                int linhasAfetadas = await _context.SaveChangesAsync();
+
+                return Ok(linhasAfetadas);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                Parte pRemover = await _context.TB_PARTES.FirstOrDefaultAsync(p => p.Id == id);
+
+                _context.TB_PARTES.Remove(pRemover);
+                int linhasAfetadas = await _context.SaveChangesAsync();
+
+                return Ok(linhasAfetadas);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

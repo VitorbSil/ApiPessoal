@@ -14,5 +14,9 @@ namespace APIPessoal.Models
     public string Endereco { get; set; }
     public string Telefone { get; set; }
     public string Email { get; set; }
+
+    public List<Documento> Documentos {get; set;} = new List<Documento>();
+
+    public Contrato Contrato {get; set;}
     }
 }

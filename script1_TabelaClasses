@@ -1,0 +1,78 @@
+﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+GO
+
+BEGIN TRANSACTION;
+CREATE TABLE [TB_CONTRATOS] (
+    [Id] int NOT NULL IDENTITY,
+    [Titulo] varchar(200) NULL,
+    [DataInicio] datetime2 NULL,
+    [DataFim] datetime2 NULL,
+    [Status] varchar(200) NULL,
+    [Cliente] varchar(200) NULL,
+    [Prestador] varchar(200) NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_TB_CONTRATOS] PRIMARY KEY ([Id])
+);
+
+CREATE TABLE [TB_DOCUMENTOS] (
+    [Id] int NOT NULL IDENTITY,
+    [Titulo] varchar(200) NULL,
+    [Tipo] varchar(200) NULL,
+    [DataCriacao] datetime2 NOT NULL,
+    [Status] varchar(200) NULL,
+    [Observacoes] varchar(200) NULL,
+    [Assinado] bit NOT NULL,
+    CONSTRAINT [PK_TB_DOCUMENTOS] PRIMARY KEY ([Id])
+);
+
+CREATE TABLE [TB_PARTES] (
+    [Id] int NOT NULL IDENTITY,
+    [Nome] varchar(200) NULL,
+    [Tipo] varchar(200) NULL,
+    [DocumentoIdentidade] varchar(200) NULL,
+    [Endereco] varchar(200) NULL,
+    [Telefone] varchar(200) NULL,
+    [Email] varchar(200) NULL,
+    CONSTRAINT [PK_TB_PARTES] PRIMARY KEY ([Id])
+);
+
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Cliente', N'DataFim', N'DataInicio', N'Prestador', N'Status', N'Titulo', N'Valor') AND [object_id] = OBJECT_ID(N'[TB_CONTRATOS]'))
+    SET IDENTITY_INSERT [TB_CONTRATOS] ON;
+INSERT INTO [TB_CONTRATOS] ([Id], [Cliente], [DataFim], [DataInicio], [Prestador], [Status], [Titulo], [Valor])
+VALUES (1, 'ETEC', '2024-10-24T00:00:00.0000000', '2023-10-24T00:00:00.0000000', 'EscritórioX', 'Ativo', 'Primeiro Contrato', 1300.0),
+(2, 'Casa de Bolo', '2024-07-08T00:00:00.0000000', '2023-07-08T00:00:00.0000000', 'EscritórioY', 'Desativado', 'Segundo Contrato', 2500.0),
+(3, 'Mercadinho', '2024-04-20T00:00:00.0000000', '2023-04-20T00:00:00.0000000', 'EscritórioZ', 'Ativo', 'Terceiro Contrato', 800.0);
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Cliente', N'DataFim', N'DataInicio', N'Prestador', N'Status', N'Titulo', N'Valor') AND [object_id] = OBJECT_ID(N'[TB_CONTRATOS]'))
+    SET IDENTITY_INSERT [TB_CONTRATOS] OFF;
+
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Assinado', N'DataCriacao', N'Observacoes', N'Status', N'Tipo', N'Titulo') AND [object_id] = OBJECT_ID(N'[TB_DOCUMENTOS]'))
+    SET IDENTITY_INSERT [TB_DOCUMENTOS] ON;
+INSERT INTO [TB_DOCUMENTOS] ([Id], [Assinado], [DataCriacao], [Observacoes], [Status], [Tipo], [Titulo])
+VALUES (1, CAST(1 AS bit), '2023-10-24T00:00:00.0000000', 'Contrato de prestação de serviços firmado entre as partes.', 'Ativo', 'Contrato', 'Contrato de Prestação de Serviços'),
+(2, CAST(0 AS bit), '2023-07-08T00:00:00.0000000', 'Procuração para representação legal do cliente.', 'Ativo', 'Procuração', 'Procuração'),
+(3, CAST(0 AS bit), '2023-04-20T00:00:00.0000000', 'Certidão de casamento registrada em cartório.', 'Ativo', 'Certidão', 'Certidão de Casamento');
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Assinado', N'DataCriacao', N'Observacoes', N'Status', N'Tipo', N'Titulo') AND [object_id] = OBJECT_ID(N'[TB_DOCUMENTOS]'))
+    SET IDENTITY_INSERT [TB_DOCUMENTOS] OFF;
+
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'DocumentoIdentidade', N'Email', N'Endereco', N'Nome', N'Telefone', N'Tipo') AND [object_id] = OBJECT_ID(N'[TB_PARTES]'))
+    SET IDENTITY_INSERT [TB_PARTES] ON;
+INSERT INTO [TB_PARTES] ([Id], [DocumentoIdentidade], [Email], [Endereco], [Nome], [Telefone], [Tipo])
+VALUES (1, 'RG', 'vitor@email.com', 'Rua 1, Bairro A, Cidade X', 'Vitor', '1234-5678', 'Cliente'),
+(2, 'OAB', 'ana@adv.com', 'Rua 2, Bairro B, Cidade Y', 'Ana', '2345-6789', 'Advogado'),
+(3, 'CPF', 'carlos@teste.com', 'Rua 3, Bairro C, Cidade Z', 'Carlos', '3456-7890', 'Testemunha');
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'DocumentoIdentidade', N'Email', N'Endereco', N'Nome', N'Telefone', N'Tipo') AND [object_id] = OBJECT_ID(N'[TB_PARTES]'))
+    SET IDENTITY_INSERT [TB_PARTES] OFF;
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20241113224605_InitialCreate', N'9.0.0');
+
+COMMIT;
+GO
+

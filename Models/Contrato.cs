@@ -15,5 +15,9 @@ namespace APIPessoal.Models
         public string Cliente { get; set; }
         public string Prestador { get; set; }
         public decimal Valor { get; set; }
+
+        public Parte Parte { get; set; }
+
+        public int ParteId { get; set; }
     }
 }

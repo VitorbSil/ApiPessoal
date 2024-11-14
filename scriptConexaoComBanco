@@ -1,0 +1,58 @@
+﻿BEGIN TRANSACTION;
+ALTER TABLE [TB_DOCUMENTOS] ADD [ParteId] int NOT NULL DEFAULT 0;
+
+ALTER TABLE [TB_CONTRATOS] ADD [ParteId] int NOT NULL DEFAULT 0;
+
+UPDATE [TB_CONTRATOS] SET [ParteId] = 1
+WHERE [Id] = 1;
+SELECT @@ROWCOUNT;
+
+
+UPDATE [TB_CONTRATOS] SET [ParteId] = 2
+WHERE [Id] = 2;
+SELECT @@ROWCOUNT;
+
+
+UPDATE [TB_CONTRATOS] SET [ParteId] = 3
+WHERE [Id] = 3;
+SELECT @@ROWCOUNT;
+
+
+UPDATE [TB_DOCUMENTOS] SET [ParteId] = 1
+WHERE [Id] = 1;
+SELECT @@ROWCOUNT;
+
+
+UPDATE [TB_DOCUMENTOS] SET [ParteId] = 1
+WHERE [Id] = 2;
+SELECT @@ROWCOUNT;
+
+
+UPDATE [TB_DOCUMENTOS] SET [ParteId] = 1
+WHERE [Id] = 3;
+SELECT @@ROWCOUNT;
+
+
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Assinado', N'DataCriacao', N'Observacoes', N'ParteId', N'Status', N'Tipo', N'Titulo') AND [object_id] = OBJECT_ID(N'[TB_DOCUMENTOS]'))
+    SET IDENTITY_INSERT [TB_DOCUMENTOS] ON;
+INSERT INTO [TB_DOCUMENTOS] ([Id], [Assinado], [DataCriacao], [Observacoes], [ParteId], [Status], [Tipo], [Titulo])
+VALUES (4, CAST(0 AS bit), '2024-11-01T00:00:00.0000000', 'Alvará de Soltura esperando análise do Juiz.', 3, 'Pendente', 'Alvará', 'Alvará de Soltura'),
+(5, CAST(1 AS bit), '2021-01-01T00:00:00.0000000', 'Petição cadastrada e enviada para o Juiz.', 3, 'Ativo', 'Petição', 'Petição de Invertário'),
+(6, CAST(0 AS bit), '2022-06-15T00:00:00.0000000', 'Mandado de Busca aguardando assinatura do judiciário', 2, 'Pendente', 'Mandato', 'Mandato de Busca');
+IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Assinado', N'DataCriacao', N'Observacoes', N'ParteId', N'Status', N'Tipo', N'Titulo') AND [object_id] = OBJECT_ID(N'[TB_DOCUMENTOS]'))
+    SET IDENTITY_INSERT [TB_DOCUMENTOS] OFF;
+
+CREATE INDEX [IX_TB_DOCUMENTOS_ParteId] ON [TB_DOCUMENTOS] ([ParteId]);
+
+CREATE UNIQUE INDEX [IX_TB_CONTRATOS_ParteId] ON [TB_CONTRATOS] ([ParteId]);
+
+ALTER TABLE [TB_CONTRATOS] ADD CONSTRAINT [FK_TB_CONTRATOS_TB_PARTES_ParteId] FOREIGN KEY ([ParteId]) REFERENCES [TB_PARTES] ([Id]) ON DELETE CASCADE;
+
+ALTER TABLE [TB_DOCUMENTOS] ADD CONSTRAINT [FK_TB_DOCUMENTOS_TB_PARTES_ParteId] FOREIGN KEY ([ParteId]) REFERENCES [TB_PARTES] ([Id]);
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20241114013743_MigracaoConexaoComBanco', N'9.0.0');
+
+COMMIT;
+GO
+
